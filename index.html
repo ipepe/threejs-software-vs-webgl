@@ -1,0 +1,68 @@
+<html>
+<head>
+    <title>In-Browser test</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.rawgit.com/jashkenas/coffeescript/1.11.1/extras/coffee-script.js"></script>
+    <script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+    <script type="text/javascript" src="https://threejs.org/examples/js/loaders/STLLoader.js"></script>
+    <script type="text/javascript" src="https://threejs.org/examples/js/renderers/Projector.js"></script>
+    <script type="text/javascript" src="https://threejs.org/examples/js/renderers/CanvasRenderer.js"></script>
+</head>
+<body bgcolor="#a9a9a9">
+    <table>
+        <thead>
+            <tr>
+                <th>WebGLRenderer based three.js</th>
+                <th>CanvasRenderer based three.js</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><div id="webgl-preview"></div></td>
+            <td><div id="canvas-preview"></div></td>
+        </tr>
+        </tbody>
+    </table>
+    <script type="text/coffeescript">
+    class window.ThreeJSApp
+        renderer: null
+        preview: null
+        mesh: null
+        constructor: (preview_selector, renderer_name)->
+            @renderer = new THREE[renderer_name]()
+            @preview = $(preview_selector)
+            @preview.append(@renderer.domElement)
+            @camera = new THREE.PerspectiveCamera(45, 3, 0.1, 10000)
+            @scene = new THREE.Scene()
+            @scene.add(@camera)
+            @directionalLight = new THREE.DirectionalLight(0xffffff, 1.2)
+            [width, height] = [400, 400]
+            @renderer.setSize(width, height)
+            @camera.add(@directionalLight)
+            @camera.aspect = width / height
+            @camera.updateProjectionMatrix()
+            @camera.position.set(80, 80, 0)
+            @camera.lookAt(new THREE.Vector3(0, 25, 0))
+
+            @material = new THREE.MeshLambertMaterial(color: '#06AAE1')
+            new THREE.STLLoader().load './3DBenchy.stl', (geometry)=>
+                @mesh = new THREE.Mesh(geometry, @material)
+                @mesh.rotation.x = -Math.PI/2
+                @scene.add(@mesh)
+            @animate()
+
+        animate: ->
+            @render()
+            window.requestAnimationFrame(=> @animate())
+
+        render: ->
+            @mesh?.rotation.z += 0.05
+            @renderer.render(@scene, @camera)
+
+    </script>
+    <script type="text/coffeescript">
+        window.webgl = new ThreeJSApp('#webgl-preview', 'WebGLRenderer')
+        window.canvas = new ThreeJSApp('#canvas-preview', 'CanvasRenderer')
+    </script>
+</body>
+</html>
